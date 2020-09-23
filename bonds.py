@@ -24,21 +24,21 @@ class Arbonds:
 
     def read_csv(self,arch):
         """Reads bond interest and principal payments"""
-        df = pd.read_csv(arch, names=['fecha','i','A'])
+        path = "data/" + arch
+        df = pd.read_csv(path, names=['fecha','i','A'])
         df['fecha']=pd.to_datetime(df.fecha,format="%d/%m/%y")
         df.set_index("fecha",inplace=True)
         return df
         
     def npv(self, i_rate, cash_flows, years):
-        """Returns Net Present Value for an array of cashflows and times
-        given an interest rate i_rate
-        cash_flos and years are numpy arrays"""
-        return np.sum(cash_flows/(1+i_rate) ** years)
+        """Returns Net Present Value for an array of cashflows and times given
+        an interest rate i_rate. cash_flwos and years must be numpy arrays"""
+        return np.sum(cash_flows / ( 1 + i_rate ) ** years)
     
-    def true_cash_flows(self, bond_df,i,R,date=None):
-        """Returns bond cashflows including purchase price "R" and interest
-        at purchase time "i" for a purchase "date". If date is not given
-        set date as today"""
+    def include_purchase_cash_flow(self, bond_df, i, R, date=None):
+        """Completes the bond cash flows with purchase data. This method
+        insert an interest i and principal R at given date. If date is None,
+        then date = datetime.now()"""
         
         #  If not given, set date to now
         if date is None:
@@ -46,31 +46,36 @@ class Arbonds:
             
         #  Include purchase data in cashflows
         df = bond_df
-        df.loc[date]=[i,R]
+        df.loc[date]=[i, R]
         df.sort_index(inplace=True)
-        
         return df
         
-    def years_diff(self, df):
-        """Return a numpy array of years since first cashflow"""
+    def get_yrs_array(self, df):
+        """Returns a numpy array with the time of each cashflow (in years)
+        since first one"""
         years_raw = df.index.to_series().subtract(df.index[0]).values
         years_raw = years_raw/(60*60*24*365)
         return np.array([i*1e-9 for i in years_raw.astype(float)])
+
+    def get_cfs_array(self,bond_df):
+        """Given a bond dataframe, returns the implied array of cashflows"""
+        return cfs = (bond_df.i+bond_df.A).values
         
-    def get_irr(self, cash_flows, years, x0):
+    def compute_irr(self, cash_flows, years, x0):
         """Computes IRR for given cash_flows"""
         return np.asscalar(fsolve(self.npv, 
                                   x0=x0, 
                                   args=(cash_flows, years)))
     
     def get_bond_irr(self, bond_df):
-        """Given a dataframe of bond cashflows, cumpute irr"""
-        cfs = (bond_df.i+bond_df.A).values
-        yrs = self.years_diff(bond_df)
-        return self.get_irr(cfs,yrs,0.10)
+        """Given a dataframe of bond cashflows, cumpute the implied irr"""
+        cfs = self.get_cfs_array(bond_df)
+        yrs = self.get_yrs_array(bond_df)
+        return self.compute_irr(cfs,yrs,0.10)
     
-    def get_prices(self, site, ticker_list=None, append_D=True):
-        """Returns prices of bond taken from site using PScrapper"""
+    def get_bond_prices(self, site, ticker_list=None, dkind=True):
+        """Returns prices of bond taken from site using PScrapper.
+        if dkind, then append "D" to tickers"""
         if ticker_list is None:
             if append_D:
                 ticker_list = [i + "D" for i in self.names]
