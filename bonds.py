@@ -10,6 +10,7 @@ from price_scrapper import PScrapper
 # * Improve file handle
 # * Improve handling of coupon periods in mdur
 # * Improve handling of "D" kind and names.
+# * Improve handling of sites for scrapping
 
 class Arbonds:
 
@@ -119,6 +120,8 @@ class Arbonds:
             self.bond_irr[ticker] = self.get_bond_irr(self.bond_cfs[ticker])
             
     def get_macaulay_dur(self, bond_df, irr):
+        """Given a bond cash flows dataframe, and a yield, 
+        this method finds the Macaulay duration"""
         cfs = self.get_cfs_array(bond_df)
         yrs = self.get_yrs_array(bond_df)
         npv = self.npv(irr,cfs[1:], yrs[1:])
@@ -128,6 +131,8 @@ class Arbonds:
         return acum/npv
         
     def set_bond_macaulay(self, site="rava", dkind=True):
+        """Sets the value of self.macaulay as a dict of Macaulay
+        durations for each bond"""
         if self.bond_irr == {}:
             self.set_bond_irr(site=site, dkind=dkind)
         for ticker in self.names:
@@ -136,6 +141,8 @@ class Arbonds:
             self.macaulay[ticker] = self.get_macaulay_dur(bdf, irr)
 
     def set_bond_mdur(self, site="rava", dkind=True, periods=2.0):
+        """Sets the value of self.bond_mdur as a dict of modified durations
+        for each bond"""
         if self.macaulay == {}:
             self.set_bond_macaulay(site=site, dkind=dkind)
         for ticker in self.names:
