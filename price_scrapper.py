@@ -2,12 +2,14 @@ from urllib.request import urlopen
 from lxml import etree
 import numpy as np
 
-#response = urlopen("http://www.rava.com/empresas/perfil.php?e=AL29D")
 
 class PScrapper:
     site = {'rava' : {'url': 'http://www.rava.com/empresas/perfil.php?e=',
                       'xpath':'//td/span/text()',
-                      'loc':0}
+                      'loc':0},
+            'eco' : {'url': 'http://bonos.ecobolsar.com.ar/eco/ticker.php?t=',
+                    'xpath':"//td[@class='precioticker']/text()",
+                    'loc': 0}
            }
                       
     def __init__(self):

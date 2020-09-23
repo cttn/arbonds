@@ -10,11 +10,12 @@ from price_scrapper import PScrapper
 # * Improve file handle
 # * Improve handling of coupon periods in mdur
 # * Improve handling of "D" kind and names.
-# * Improve handling of sites for scrapping
+# * Improve handling of sites for scrapping.
 
 class Arbonds:
 
-    names = ["AL29", "AL30", "AL35", "AE38", "AL41"]
+    names = ["AL29", "AL30", "AL35", "AE38", "AL41", 
+             "GD29", "GD30", "GD35", "GD38", "GD41"]
 
     def __init__(self):
         self.prices = {}
@@ -25,7 +26,7 @@ class Arbonds:
         self.bond_mdur = {}
         self.summary = None
         
-    def update(self, site="rava", dkind=True):
+    def update(self, site="eco", dkind=True):
         self.set_bond_prices(site=site, dkind=dkind)
         self.set_summary(site=site, dkind=dkind)
 
@@ -112,7 +113,7 @@ class Arbonds:
             df = self.include_purchase_cfs(df_raw, 0, -price)
             self.bond_cfs[ticker] = df
         
-    def set_bond_irr(self, site="rava", dkind=True):
+    def set_bond_irr(self, site="eco", dkind=True):
         """For each bond, calculates irr using info in self.bond_cfs"""
         if self.bond_cfs == {}:
             self.set_bond_cfs(site=site, dkind=dkind)
@@ -130,7 +131,7 @@ class Arbonds:
             acum = acum + self.npv(irr, cfs[i], yrs[i])*yrs[i]
         return acum/npv
         
-    def set_bond_macaulay(self, site="rava", dkind=True):
+    def set_bond_macaulay(self, site="eco", dkind=True):
         """Sets the value of self.macaulay as a dict of Macaulay
         durations for each bond"""
         if self.bond_irr == {}:
@@ -140,7 +141,7 @@ class Arbonds:
             irr = self.bond_irr[ticker]
             self.macaulay[ticker] = self.get_macaulay_dur(bdf, irr)
 
-    def set_bond_mdur(self, site="rava", dkind=True, periods=2.0):
+    def set_bond_mdur(self, site="eco", dkind=True, periods=2.0):
         """Sets the value of self.bond_mdur as a dict of modified durations
         for each bond"""
         if self.macaulay == {}:
